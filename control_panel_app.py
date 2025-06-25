@@ -118,7 +118,7 @@ elif selected_option == "عرض الأكواد والمستخدمين":
             if code_to_delete:
                 delete_activation_code(code_to_delete.strip())
                 st.success(f"تم حذف الكود '{code_to_delete}' بنجاح.")
-                st.experimental_rerun()
+                st.rerun() # تم التعديل هنا
             else:
                 st.warning("الرجاء إدخال كود لحذفه.")
     else:
@@ -153,7 +153,7 @@ elif selected_option == "إدارة المستخدمين":
             if user_id_to_reset:
                 reset_user_activation(user_id_to_reset.strip())
                 st.success(f"تم إعادة تعيين تفعيل المستخدم '{user_id_to_reset}' بنجاح.")
-                st.experimental_rerun()
+                st.rerun() # تم التعديل هنا
             else:
                 st.warning("الرجاء إدخال معرف المستخدم.")
     else:
