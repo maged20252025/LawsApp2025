@@ -41,7 +41,7 @@ def init_db():
     conn.close()
 
 def get_user_id():
-    """الحصول على معرف المستخدم الحالي أو إنشاؤه إذا لم يكن موجودًا."""
+    """الحصول على معرف المستخدم الحالي أو إنشائه إذا لم يكن موجودًا."""
     if 'user_id' not in st.session_state:
         st.session_state.user_id = str(uuid.uuid4())
         conn = sqlite3.connect(DATABASE_FILE)
@@ -214,7 +214,7 @@ def run_main_app_logic():
                 current_article_paragraphs = []
                 last_article_num = "غير معروفة"
 
-                for i, para_text in enumerate(all_paragraphs_in_doc):
+                for i, para_text in enumerate(all_paragraphs_in_ol_doc):
                     match = re.match(r"مادة\s*\(?\s*(\d+)\)?", para_text)
                     if match:
                         if current_article_paragraphs:
@@ -298,7 +298,7 @@ def main():
                 set_trial_start_time(user_id)
                 st.session_state.trial_start_time = time.time()
                 st.success("🎉 بدأت النسخة التجريبية. لديك 5 دقائق. يرجى تحديث الصفحة أو إعادة تشغيل التطبيق.")
-                st.experimental_rerun()
+                st.rerun() # تم التعديل هنا
         else:
             time_elapsed = time.time() - trial_start_time
             if time_elapsed < TRIAL_DURATION:
@@ -313,7 +313,7 @@ def main():
             if code and activate_app(user_id, code.strip()):
                 st.success("✅ تم التفعيل بنجاح! يرجى تحديث الصفحة أو إعادة تشغيل التطبيق لتطبيق التغييرات.")
                 st.session_state.activated = True
-                st.experimental_rerun()
+                st.rerun() # تم التعديل هنا
             else:
                 st.error("❌ كود التفعيل غير صحيح أو تم استخدامه مسبقًا.")
     else:
