@@ -214,7 +214,8 @@ def run_main_app_logic():
                 current_article_paragraphs = []
                 last_article_num = "غير معروفة"
 
-                for i, para_text in enumerate(all_paragraphs_in_ol_doc):
+                # >>>>>> هذا هو السطر الذي تم تصحيحه <<<<<<
+                for i, para_text in enumerate(all_paragraphs_in_doc): 
                     match = re.match(r"مادة\s*\(?\s*(\d+)\)?", para_text)
                     if match:
                         if current_article_paragraphs:
@@ -298,7 +299,7 @@ def main():
                 set_trial_start_time(user_id)
                 st.session_state.trial_start_time = time.time()
                 st.success("🎉 بدأت النسخة التجريبية. لديك 5 دقائق. يرجى تحديث الصفحة أو إعادة تشغيل التطبيق.")
-                st.rerun() # تم التعديل هنا
+                st.rerun() 
         else:
             time_elapsed = time.time() - trial_start_time
             if time_elapsed < TRIAL_DURATION:
@@ -313,7 +314,7 @@ def main():
             if code and activate_app(user_id, code.strip()):
                 st.success("✅ تم التفعيل بنجاح! يرجى تحديث الصفحة أو إعادة تشغيل التطبيق لتطبيق التغييرات.")
                 st.session_state.activated = True
-                st.rerun() # تم التعديل هنا
+                st.rerun() 
             else:
                 st.error("❌ كود التفعيل غير صحيح أو تم استخدامه مسبقًا.")
     else:
