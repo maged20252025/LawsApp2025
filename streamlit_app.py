@@ -7,7 +7,7 @@ import time
 import base64
 import sqlite3
 import uuid
-import hashlib # لإضافة حماية بسيطة لكلمة مرور المدير
+import hashlib
 
 st.set_page_config(page_title="القوانين اليمنية بآخر تعديلاتها حتى عام 2025م", layout="wide")
 st.markdown("<h1 style='text-align: center;'>مرحبًا بك في تطبيق القوانين اليمنية بآخر تعديلاتها حتى عام 2025م</h1>", unsafe_allow_html=True)
@@ -171,33 +171,44 @@ def admin_panel():
     st.sidebar.markdown("---")
     st.sidebar.header("عرض الأكواد والمستخدمين")
 
+    # عرض أكواد التفعيل
     st.subheader("قائمة أكواد التفعيل:")
     codes_data = get_all_activation_codes()
     if codes_data:
-        st.table([
-            {"الكود": code[0], "الحالة": "مستخدم" if code[1] else "غير مستخدم", "مستخدم بواسطة": code[2] if code[2] else "لا يوجد"}
-            for code in codes_data
-        ])
+        # Use an expander for codes
+        with st.expander("عرض/إخفاء أكواد التفعيل", expanded=True):
+            for code in codes_data:
+                code_str, is_used, used_by = code
+                status = "مستخدم" if is_used else "غير مستخدم"
+                used_by_text = f"بواسطة: {used_by}" if used_by else "لا يوجد"
+                if is_used:
+                    st.info(f"**الكود:** `{code_str}`\n\n**الحالة:** {status}\n\n**مستخدم:** {used_by_text}")
+                else:
+                    st.success(f"**الكود:** `{code_str}`\n\n**الحالة:** {status}")
+                st.markdown("---") # Add a separator
     else:
         st.info("لا توجد أكواد تفعيل بعد.")
 
+    # عرض المستخدمين
     st.subheader("قائمة المستخدمين:")
     users_data = get_all_users()
     if users_data:
-        formatted_users = []
-        for user in users_data:
-            user_id, is_activated, trial_start_time, last_activity_time, activation_code_used = user
-            status = "مفعل" if is_activated else ("تجريبي" if trial_start_time else "غير مفعل")
-            last_activity = time.ctime(last_activity_time) if last_activity_time else "لا يوجد"
-            trial_start = time.ctime(trial_start_time) if trial_start_time else "لا يوجد"
-            formatted_users.append({
-                "معرف المستخدم": user_id,
-                "الحالة": status,
-                "بداية التجربة": trial_start,
-                "آخر نشاط": last_activity,
-                "الكود المستخدم": activation_code_used if activation_code_used else "لا يوجد"
-            })
-        st.table(formatted_users)
+        # Use an expander for users
+        with st.expander("عرض/إخفاء المستخدمين", expanded=True):
+            for user in users_data:
+                user_id, is_activated, trial_start_time, last_activity_time, activation_code_used = user
+                status = "مفعل" if is_activated else ("تجريبي" if trial_start_time else "غير مفعل")
+                last_activity = time.ctime(last_activity_time) if last_activity_time else "لا يوجد"
+                trial_start = time.ctime(trial_start_time) if trial_start_time else "لا يوجد"
+                
+                # Display user info in a box
+                if is_activated:
+                    st.success(f"**معرف المستخدم:** `{user_id}`\n\n**الحالة:** {status}\n\n**الكود المستخدم:** {activation_code_used if activation_code_used else 'لا يوجد'}\n\n**آخر نشاط:** {last_activity}")
+                elif trial_start_time:
+                    st.info(f"**معرف المستخدم:** `{user_id}`\n\n**الحالة:** {status}\n\n**بداية التجربة:** {trial_start}\n\n**آخر نشاط:** {last_activity}")
+                else:
+                    st.warning(f"**معرف المستخدم:** `{user_id}`\n\n**الحالة:** {status}\n\n**آخر نشاط:** {last_activity}")
+                st.markdown("---") # Add a separator
     else:
         st.info("لا توجد بيانات مستخدمين بعد.")
     
@@ -229,7 +240,7 @@ def extract_context(paragraphs, keywords, context_lines=3):
         for i in range(max(0, idx - context_lines), min(len(paragraphs), idx + context_lines + 1)):
             context_set.add(i)
             
-    filtered_paragraphs = [paragraphs[i] for p in sorted(context_set) if paragraphs[i].strip()] # Fixed bug here
+    filtered_paragraphs = [paragraphs[i] for i in sorted(context_set) if paragraphs[i].strip()]
     return "\n".join(filtered_paragraphs)
 
 def export_results_to_docx(results, filename="نتائج_البحث.docx"):
@@ -388,14 +399,14 @@ def main():
         # طلب كلمة مرور المدير
         st.sidebar.markdown("---")
         password_input = st.sidebar.text_input("كلمة مرور المدير:", type="password")
-        if verify_password(hash_password(ADMIN_PASSWORD), password_input): # قارن الهاش
+        if verify_password(hash_password(ADMIN_PASSWORD), password_input):
             st.session_state.admin_logged_in = True
             admin_panel()
         else:
             st.sidebar.error("كلمة مرور غير صحيحة.")
             st.session_state.admin_logged_in = False
     elif app_mode == "التطبيق الرئيسي":
-        st.session_state.admin_logged_in = False # التأكد من تسجيل الخروج كمدير عند العودة للتطبيق الرئيسي
+        st.session_state.admin_logged_in = False
         if "activated" not in st.session_state:
             st.session_state.activated = is_activated(user_id)
 
