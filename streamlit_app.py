@@ -14,7 +14,8 @@ st.markdown("<h1 style='text-align: center;'>مرحبًا بك في تطبيق �
 
 TRIAL_DURATION = 300 # 5 minutes in seconds
 DATABASE_FILE = "user_data.db"
-ADMIN_PASSWORD = "admin_password" # قم بتغيير هذه الكلمة إلى كلمة مرور قوية!
+# تم تغيير كلمة مرور المدير هنا
+ADMIN_PASSWORD = "maged223562" # تم تغيير كلمة المرور بناءً على طلبك!
 
 def hash_password(password):
     """Hashing a password for simple protection."""
@@ -175,7 +176,6 @@ def admin_panel():
     st.subheader("قائمة أكواد التفعيل:")
     codes_data = get_all_activation_codes()
     if codes_data:
-        # Use an expander for codes
         with st.expander("عرض/إخفاء أكواد التفعيل", expanded=True):
             for code in codes_data:
                 code_str, is_used, used_by = code
@@ -185,7 +185,7 @@ def admin_panel():
                     st.info(f"**الكود:** `{code_str}`\n\n**الحالة:** {status}\n\n**مستخدم:** {used_by_text}")
                 else:
                     st.success(f"**الكود:** `{code_str}`\n\n**الحالة:** {status}")
-                st.markdown("---") # Add a separator
+                st.markdown("---")
     else:
         st.info("لا توجد أكواد تفعيل بعد.")
 
@@ -193,7 +193,6 @@ def admin_panel():
     st.subheader("قائمة المستخدمين:")
     users_data = get_all_users()
     if users_data:
-        # Use an expander for users
         with st.expander("عرض/إخفاء المستخدمين", expanded=True):
             for user in users_data:
                 user_id, is_activated, trial_start_time, last_activity_time, activation_code_used = user
@@ -201,14 +200,13 @@ def admin_panel():
                 last_activity = time.ctime(last_activity_time) if last_activity_time else "لا يوجد"
                 trial_start = time.ctime(trial_start_time) if trial_start_time else "لا يوجد"
                 
-                # Display user info in a box
                 if is_activated:
                     st.success(f"**معرف المستخدم:** `{user_id}`\n\n**الحالة:** {status}\n\n**الكود المستخدم:** {activation_code_used if activation_code_used else 'لا يوجد'}\n\n**آخر نشاط:** {last_activity}")
                 elif trial_start_time:
                     st.info(f"**معرف المستخدم:** `{user_id}`\n\n**الحالة:** {status}\n\n**بداية التجربة:** {trial_start}\n\n**آخر نشاط:** {last_activity}")
                 else:
                     st.warning(f"**معرف المستخدم:** `{user_id}`\n\n**الحالة:** {status}\n\n**آخر نشاط:** {last_activity}")
-                st.markdown("---") # Add a separator
+                st.markdown("---")
     else:
         st.info("لا توجد بيانات مستخدمين بعد.")
     
@@ -395,18 +393,33 @@ def main():
     st.sidebar.title("خيارات التطبيق")
     app_mode = st.sidebar.radio("اختر الوضع:", ["التطبيق الرئيسي", "لوحة المدير"])
 
-    if app_mode == "لوحة المدير":
-        # طلب كلمة مرور المدير
-        st.sidebar.markdown("---")
-        password_input = st.sidebar.text_input("كلمة مرور المدير:", type="password")
-        if verify_password(hash_password(ADMIN_PASSWORD), password_input):
-            st.session_state.admin_logged_in = True
-            admin_panel()
-        else:
-            st.sidebar.error("كلمة مرور غير صحيحة.")
-            st.session_state.admin_logged_in = False
-    elif app_mode == "التطبيق الرئيسي":
+    # تهيئة حالة تسجيل دخول المدير إذا لم تكن موجودة
+    if 'admin_logged_in' not in st.session_state:
         st.session_state.admin_logged_in = False
+
+    if app_mode == "لوحة المدير":
+        st.sidebar.markdown("---")
+        # إذا لم يكن المدير مسجلاً الدخول بعد في هذه الجلسة، اطلب كلمة المرور
+        if not st.session_state.admin_logged_in:
+            password_input = st.sidebar.text_input("كلمة مرور المدير:", type="password", key="admin_password_input")
+            if st.sidebar.button("تسجيل الدخول كمدير"):
+                if verify_password(hash_password(ADMIN_PASSWORD), password_input):
+                    st.session_state.admin_logged_in = True
+                    st.success("تم تسجيل الدخول كمدير بنجاح!")
+                    st.rerun() # لإعادة تحميل الصفحة وعرض لوحة المدير مباشرة
+                else:
+                    st.sidebar.error("كلمة مرور غير صحيحة.")
+        
+        # إذا كان المدير مسجلاً الدخول (أو بعد تسجيل الدخول بنجاح)
+        if st.session_state.admin_logged_in:
+            admin_panel()
+            if st.sidebar.button("تسجيل الخروج كمدير"):
+                st.session_state.admin_logged_in = False
+                st.rerun() # لإعادة تحميل الصفحة والعودة لوضع طلب كلمة المرور
+    elif app_mode == "التطبيق الرئيسي":
+        # إعادة تعيين حالة تسجيل دخول المدير عند التبديل إلى التطبيق الرئيسي
+        # st.session_state.admin_logged_in = False # لا حاجة لهذا هنا إذا أردنا الاحتفاظ بـ admin_logged_in عبر تبديل الراديو
+        
         if "activated" not in st.session_state:
             st.session_state.activated = is_activated(user_id)
 
